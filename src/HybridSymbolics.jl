@@ -52,7 +52,7 @@ macro hybrid(fun)
     fixed_args = []
     varying_args = []
     all_args = []
-    for arg in fun_args
+    for (i,arg) in enumerate(fun_args)
         name, type = name_and_type(arg)
         if type == :Global
             push!(global_args, name)
@@ -62,6 +62,7 @@ macro hybrid(fun)
             push!(varying_args, name)
         end
         push!(all_args, name)
+        fun.args[1].args[1+i] = name
     end
     global_args = Expr(:vect, global_args...)
     fixed_args = Expr(:vect, fixed_args...)
