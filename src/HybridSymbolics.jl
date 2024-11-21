@@ -1,5 +1,6 @@
 module HybridSymbolics
 
-# Write your package code here.
+    using Symbolics
+    # Write your package code here.
 
 end
