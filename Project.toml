@@ -14,6 +14,7 @@ ProtoStructs = "437b6fc4-8e8e-11e9-3fa1-ad391e66c018"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SymbolicUtils = "d1185830-fcd6-423d-90d6-eec64667417b"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 ADTypes = "1.11.0"
@@ -26,6 +27,7 @@ ProtoStructs = "1.2.1"
 Random = "1.11.0"
 SymbolicUtils = "3.7.2"
 Symbolics = "6.22.0"
+Zygote = "0.6.73"
 julia = "1.10"
 
 [extras]
