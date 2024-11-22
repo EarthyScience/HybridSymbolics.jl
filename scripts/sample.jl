@@ -22,8 +22,11 @@ model = HybridModel(
     structured
 )
 
-model(rand(Float32, 5), (ps, [1.2f0]), st)
-model(rand(Float32, 5,5), (ps, [1.2f0]), st)
+globals = [1.2f0]
+model_params = (nn = ps, globals = globals)
+
+model(rand(Float32, 5), model_params, st)
+model(rand(Float32, 5,5), model_params, st)
 
 # "Training"
 using Optimisers
@@ -34,13 +37,9 @@ using Zygote
 X = rand(Float32, 5, 5)
 y = rand(Float32, 5)
 
-loss(X, y, ps, globals, st) = sum((y .- model(X, (ps, globals), st)) .^ 2)
+loss(X, y, model_params, st) = sum((y .- model(X, model_params, st)) .^ 2)
 
-globals_init = [1.0f0]
-
-grads = gradient((ps, globals) -> loss(X, y, ps, globals, st), ps, globals_init)
-
-opt = Optimisers.setup(AdamW(), (ps, globals_init))
-
-Optimisers.update!(opt, (ps, globals_init), grads)
+grads = gradient((model_params) -> loss(X, y, model_params, st), model_params)[1]
+opt = Optimisers.setup(AdamW(), model_params)
+Optimisers.update!(opt, model_params, grads)
 

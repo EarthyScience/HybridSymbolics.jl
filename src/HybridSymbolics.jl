@@ -47,16 +47,16 @@ end
 end
 
 function (m::HybridModel)(X::Matrix{Float32}, params, st)
-    ps = params[1]
-    globals = params[2]
+    ps = params.nn
+    globals = params.globals
     n_varargs = length(m.func.varying_args)
     out_NN = m.nn(X, ps, st)[1]
     out = m.func.opt_func(tuple([out_NN[i,:] for i = 1:n_varargs]...), globals)
     return out
 end
 function (m::HybridModel)(X::Vector{Float32}, params, st)
-    ps = params[1]
-    globals = params[2]
+    ps = params.nn
+    globals = params.globals
     n_varargs = length(m.func.varying_args)
     out_NN = m.nn(X, ps, st)[1]
     out = m.func.opt_func(tuple([[out_NN[1]] for i = 1:n_varargs]...), globals)
