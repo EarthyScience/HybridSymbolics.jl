@@ -1,3 +1,3 @@
 # HybridSymbolics.jl
 
-[![Build Status](https://github.com/qfl3x/HybridSymbolics.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/qfl3x/HybridSymbolics.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/EarthyScience/HybridSymbolics.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/EarthyScience/HybridSymbolics.jl/actions/workflows/CI.yml?query=branch%3Amain)
