@@ -1,6 +1,9 @@
 using HybridSymbolics
 using Test
 
+include("./core.jl")
 @testset "HybridSymbolics.jl" begin
-    # Write your tests here.
+    @testset test_structuredfunc()
+    @testset test_hybridmodel()
+    @testset test_gradcalc()
 end

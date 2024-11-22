@@ -60,7 +60,7 @@ function (m::HybridModel)(X::Vector{Float32}, params, st)
     n_varargs = length(m.func.varying_args)
     out_NN = m.nn(X, ps, st)[1]
     out = m.func.opt_func(tuple([[out_NN[1]] for i = 1:n_varargs]...), globals)
-    return out
+    return out[1]
 end
 
 function name_and_type(expr::Expr)
