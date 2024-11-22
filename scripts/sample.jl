@@ -5,12 +5,12 @@ local α, β, γ, δ
 @syms α::Real β::Real γ::Real δ::Real
 
 structured = @hybrid function testfunc(α::Varying, β::Varying, γ::Fixed=1.0, δ::Global)
-    return (exp(α) - β)/(γ * δ)
+    return (exp.(α) .- β)./(γ .* δ)
 end
 
 NN = Chain(
    Dense(input_size => 4, sigmoid_fast),
-   Dense(4 => 3, sigmoid_fast)
+   Dense(4 => 2, sigmoid_fast)
 )
 
 NN = f32(NN)
@@ -22,4 +22,5 @@ model = HybridModel(
     structured
 )
 
-model(rand(5), (ps, [1.2f0]), st)
+model(rand(Float32, 5), (ps, [1.2f0]), st)
+model(rand(Float32, 5,5), (ps, [1.2f0]), st)

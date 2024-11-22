@@ -46,12 +46,20 @@ end
     func::StructuredFunction{T2}
 end
 
-function (m::HybridModel)(X, params, st)
+function (m::HybridModel)(X::Matrix{Float32}, params, st)
     ps = params[1]
     globals = params[2]
+    n_varargs = length(m.func.varying_args)
     out_NN = m.nn(X, ps, st)[1]
-    return (out_NN[1], out_NN[2])
-    out = m.func.opt_func((out_NN[1], out_NN[2]), globals)
+    out = m.func.opt_func(tuple([out_NN[i,:] for i = 1:n_varargs]...), globals)
+    return out
+end
+function (m::HybridModel)(X::Vector{Float32}, params, st)
+    ps = params[1]
+    globals = params[2]
+    n_varargs = length(m.func.varying_args)
+    out_NN = m.nn(X, ps, st)[1]
+    out = m.func.opt_func(tuple([[out_NN[1]] for i = 1:n_varargs]...), globals)
     return out
 end
 
@@ -103,13 +111,13 @@ function optimize_func(fun, global_args, fixed_args, varying_args, fixed_vals)
     func_expr = copy(fun)
     func_body = func_expr.args[2]
     func_args = Expr(:tuple)
-    varying_tuple = Expr(:(::), :varying_params, Expr(:curly, :Tuple, [:Float32 for _ in varying_args]...))
+    varying_tuple = Expr(:(::), :varying_params, Expr(:curly, :Tuple, [:(Vector{Float32}) for _ in varying_args]...))
     push!(func_args.args, varying_tuple)
     global_array = Expr(:(::), :global_params, :(Vector{Float32}))
     push!(func_args.args, global_array)
     substitutions = Dict()
     for (arg, val) in zip(fixed_args, fixed_vals)
-        substitutions[arg] = val
+        substitutions[arg] = Float32(val)
     end
     for (i, arg) in enumerate(varying_args)
         substitutions[arg] = :(varying_params[$i])
