@@ -8,6 +8,11 @@ structured = @hybrid function testfunc(α::Varying, β::Varying, γ::Fixed=1.0, 
     return (exp.(α) .- β)./(γ .* δ)
 end
 
+# TODO, define first symbolic function and then apply macro?
+# g(α, β, γ, δ) = (exp.(α) .- β)./(γ .* δ)
+# @hybrid g # ? do we even need the macro if we type annotate the input args, these are only used later to split args in the HybridModel. Needs thought!
+
+
 NN = Chain(
    Dense(input_size => 4, sigmoid_fast),
    Dense(4 => 2, sigmoid_fast)
