@@ -10,40 +10,46 @@ using ForwardDiff
 using ProgressMeter
 using ProtoStructs
 
+abstract type SymbolTypes end
 
-struct Varying
-end
-struct Global
-end
-struct Fixed
+struct Varying <: SymbolTypes end
+struct Global <: SymbolTypes end
+struct Fixed <: SymbolTypes end
+
+abstract type HybridSymbolic end
+struct PartitionedFunction{F,O,A1,A2,A3,A4,V} <: HybridSymbolic
+    func::F
+    args::A1
+    global_args::A2
+    fixed_args::A3
+    varying_args::A4
+    fixed_vals::V
+    opt_func::O
+
+    function PartitionedFunction(
+        func::F, 
+        args::A1,
+        global_args::A2,
+        fixed_args::A3,
+        varying_args::A4,
+        fixed_vals::V,
+        opt_func::O
+    ) where {F,O,A1,A2,A3,A4,V}
+        new{F,O,A1,A2,A3,A4,V}(
+            func,
+            args,
+            global_args,
+            fixed_args,
+            varying_args,
+            fixed_vals,
+            opt_func
+        )
+    end
 end
 
-@proto @kwdef struct StructuredFunction{T1, T2}
-    func::T1
-    args::Vector{SymbolicUtils.BasicSymbolic}
-    global_args::Vector{SymbolicUtils.BasicSymbolic}
-    fixed_args::Vector{SymbolicUtils.BasicSymbolic}
-    varying_args::Vector{SymbolicUtils.BasicSymbolic}
-    fixed_vals::Vector{Float32}
-    opt_func::T2
-end
-
-function StructuredFunction(func, args, global_args, fixed_args, varying_args, fixed_vals, opt_func)
-    type_wanted = SymbolicUtils.BasicSymbolic
-    StructuredFunction(
-        func,
-        convert(Vector{type_wanted}, args),
-        convert(Vector{type_wanted}, global_args),
-        convert(Vector{type_wanted}, fixed_args),
-        convert(Vector{type_wanted}, varying_args),
-        convert(Vector{Float32}, fixed_vals),
-        opt_func
-    )
-end
-
-@proto @kwdef struct HybridModel{T1, T2}
-    nn::Lux.Chain{T1}
-    func::StructuredFunction{T2}
+struct HybridModel <: HybridSymbolic
+    nn::Lux.Chain
+    func::PartitionedFunction
 end
 
 function (m::HybridModel)(X::Matrix{Float32}, params, st)
@@ -142,11 +148,11 @@ macro hybrid(fun)
     varying_args = Expr(:vect, varying_args...)
     args_syms = Expr(:vect, all_args...)
     return quote
-        StructuredFunction($(esc(fun)), $(esc(args_syms)), $(esc(global_args)), $(esc(fixed_args)), $(esc(varying_args)), $(fixed_vals), $(esc(opt_func)))
+        PartitionedFunction($(esc(fun)), $(esc(args_syms)), $(esc(global_args)), $(esc(fixed_args)), $(esc(varying_args)), $(fixed_vals), $(esc(opt_func)))
     end
 end
 
-export Global, Varying, Fixed, @hybrid, StructuredFunction, HybridModel
+export Global, Varying, Fixed, @hybrid, PartitionedFunction, HybridModel
+export HybridSymbolic, SymbolTypes
 
-# Write your package code here.
 end
