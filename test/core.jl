@@ -12,7 +12,7 @@ function test_structuredfunc()
     structured = @hybrid function testfunc(α::Varying, β::Varying, γ::Fixed=1.0, δ::Global)
         return (exp.(α) .- β)./(γ .* δ)
     end
-    @test structured isa StructuredFunction
+    @test structured isa PartitionedFunction
     @test length(structured.varying_args) == 2
     @test length(structured.global_args) == 1
     @test length(structured.fixed_args) == 1
