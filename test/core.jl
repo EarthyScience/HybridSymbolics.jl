@@ -47,6 +47,38 @@ function test_hybridmodel()
     @test model(rand(Float32, 5,5), model_params, st) isa Vector{Float32}
 end
 
+function test_bounds()
+    local input_size = 5
+    local α, β, γ, δ
+    @syms α::Real β::Real γ::Real δ::Real
+    structured = @hybrid function testfunc(α::Varying, β::Varying, γ::Fixed=1.0, δ::Global)
+        return (exp.(α) .- β)./(γ .* δ)
+    end
+    NN = Chain(
+       Dense(input_size => 4, sigmoid_fast),
+       Dense(4 => 2, sigmoid_fast)
+    )
+    NN = f32(NN)
+    rng = MersenneTwister()
+    model = HybridModel(
+        NN,
+        structured
+    )
+    model = setbounds(model, Dict(:α => (-1.0f0, 1.0f0), :β => (-1.0f0, 1.0f0)))
+    @test model isa HybridModel
+    ps, st = setup(rng, model)
+    globals = [1.2f0]
+    model_params = (nn = ps, globals = globals)
+    @test model(rand(Float32, 5), model_params, st) isa Float32
+    @test model(rand(Float32, 5,5), model_params, st) isa Vector{Float32}
+    @test all(model.p_min .== -1.0f0)
+    @test all(model.p_max .== 1.0f0)
+    @testset "Testing Bounds: input $item" for item in [rand(Float32, 5) for _ in 1:10]
+        output_params = model.nn(item, ps, st)[1]
+        @test all(output_params .>= -1.0f0) && all(output_params .<= 1.0f0)
+    end
+end
+
 function test_gradcalc()
     local input_size = 5
     local α, β, γ, δ
