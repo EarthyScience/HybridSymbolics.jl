@@ -20,13 +20,14 @@ NN = Chain(
 
 NN = f32(NN)
 rng = MersenneTwister()
-ps, st = Lux.setup(rng, NN)
 
 model = HybridModel(
     NN,
     structured
 )
+model = setbounds(model, Dict(:α => (-1.0f0, 1.0f0), :β => (-1.0f0, 1.0f0)))
 
+ps, st = setup(rng, model)
 globals = [1.2f0]
 model_params = (nn = ps, globals = globals)
 

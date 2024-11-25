@@ -9,6 +9,7 @@ using ADTypes
 using ForwardDiff
 using ProgressMeter
 using ProtoStructs
+using Random
 
 include("hybridModel.jl")
 include("macroHybrid.jl")
