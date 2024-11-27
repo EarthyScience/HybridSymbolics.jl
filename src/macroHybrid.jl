@@ -48,6 +48,7 @@ function optimize_func(fun, global_args, fixed_args, varying_args, fixed_vals)
     func_expr = copy(fun)
     func_body = func_expr.args[2]
     func_args = Expr(:tuple)
+    push!(func_args.args, :($(Expr(:parameters, :forcings))))
     varying_tuple = Expr(:(::), :varying_params, Expr(:curly, :Tuple, [:(Vector{Float32}) for _ in varying_args]...))
     push!(func_args.args, varying_tuple)
     global_array = Expr(:(::), :global_params, :(Vector{Float32}))

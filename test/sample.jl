@@ -4,8 +4,9 @@ const input_size = 5
 local α, β, γ, δ
 @syms α::Real β::Real γ::Real δ::Real
 
-structured = @hybrid function testfunc(α::Varying, β::Varying, γ::Fixed=1.0, δ::Global)
-    return (exp.(α) .- β)./(γ .* δ)
+structured = @hybrid function testfunc(α::Varying, β::Varying, γ::Fixed=1.0, δ::Global; forcings)
+    T = forcings[1,:]
+    return (exp.(α) .- β)./(γ .* δ) .+ T
 end
 
 # TODO, define first symbolic function and then apply macro?
