@@ -50,24 +50,70 @@ function HybridModel(nn::Lux.Chain, func::PartitionedFunction)
     return HybridModel(nn, func, nothing, nothing)
 end
 # TODO: This needs to be more general. i.e. ŷ = NN(α * NN(x) + β).
+#
+function (m::HybridModel)(X::VecOrMat{Float32}, params, st; forcings = nothing, return_parameters::Val{T} = Val(false)) where {T}
+    if T 
+        return runHybridModelAll(m, X, params, st; forcings = forcings, return_parameters = return_parameters)
+    else
+        return runHybridModelSimple(m, X, params, st; forcings = forcings)
+    end
+end
 
-function (m::HybridModel)(X::Matrix{Float32}, params, st)
+function runHybridModelSimple(m::HybridModel, X::Matrix{Float32}, params, st; forcings)
     ps = params.nn
     globals = params.globals
     n_varargs = length(m.func.varying_args)
     out_NN = m.nn(X, ps, st)[1]
-    out = m.func.opt_func(tuple([out_NN[i,:] for i = 1:n_varargs]...), globals)
+    out = m.func.opt_func(tuple([out_NN[i,:] for i = 1:n_varargs]...), globals; forcings = forcings)
     return out
 end
-function (m::HybridModel)(X::Vector{Float32}, params, st)
+function runHybridModelSimple(m::HybridModel, X::Vector{Float32}, params, st; forcings)
     ps = params.nn
     globals = params.globals
     n_varargs = length(m.func.varying_args)
     out_NN = m.nn(X, ps, st)[1]
-    out = m.func.opt_func(tuple([[out_NN[1]] for i = 1:n_varargs]...), globals)
+    out = m.func.opt_func(tuple([[out_NN[1]] for i = 1:n_varargs]...), globals; forcings = forcings)
     return out[1]
 end
 
+function runHybridModelAll(m::HybridModel, X::Vector{Float32}, params, st; return_parameters::Val{true}, forcings)
+    ps = params.nn
+    globals = params.globals
+    n_varargs = length(m.func.varying_args)
+    out_NN = m.nn(X, ps, st)[1]
+    y = m.func.opt_func(tuple([out_NN[i,:] for i = 1:n_varargs]...), globals; forcings = forcings)
+    D = Dict{Symbol, Float32}()
+    D[:out] = y[1]
+    for (i, param) in enumerate(m.func.varying_args)
+        D[Symbol(param)] = out_NN[i,1]
+    end
+    for (i, param) in enumerate(m.func.global_args)
+        D[Symbol(param)] = globals[i]
+    end
+    for (i, param) in enumerate(m.func.fixed_args)
+        D[Symbol(param)] = m.func.fixed_vals[i]
+    end
+    return D
+end
+function runHybridModelAll(m::HybridModel, X::Matrix{Float32}, params, st; return_parameters::Val{true}, forcings)
+    ps = params.nn
+    globals = params.globals
+    n_varargs = length(m.func.varying_args)
+    out_NN = m.nn(X, ps, st)[1]
+    y = m.func.opt_func(tuple([[out_NN[1]] for i = 1:n_varargs]...), globals; forcings = forcings)
+    D = Dict{Symbol, Vector{Float32}}()
+    D[:out] = y[1]
+    for (i, param) in enumerate(m.func.varying_args)
+        D[Symbol(param)] = out_NN[i,:]
+    end
+    for (i, param) in enumerate(m.func.global_args)
+        D[Symbol(param)] = ones(Float32, size(X,1)) .* globals[i]
+    end
+    for (i, param) in enumerate(m.func.fixed_args)
+        D[Symbol(param)] = ones(Float32, size(X,1)) .* m.func.fixed_vals[i]
+    end
+    return D
+end
 # Assumes that the last layer has sigmoid activation function
 function setbounds(m::HybridModel, bounds::Dict{Symbol, Tuple{T,T}}) where {T}
     n_args = length(m.func.varying_args)
